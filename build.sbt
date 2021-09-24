@@ -1,4 +1,4 @@
-ThisBuild / scalaVersion := "3.0.0-RC3"
+ThisBuild / scalaVersion := "3.0.2"
 
 lazy val webpage = project
   .in(file("webpage"))
@@ -6,7 +6,7 @@ lazy val webpage = project
   .settings(
     scalaJSUseMainModuleInitializer := true,
     libraryDependencies ++= Seq(
-      ("org.scala-js" %%% "scalajs-dom" % "1.1.0")
+      ("org.scala-js" %%% "scalajs-dom" % "1.2.0")
         .cross(CrossVersion.for3Use2_13)
     )
   )
@@ -16,8 +16,8 @@ lazy val webserver = project
   .in(file("webserver"))
   .settings(
     libraryDependencies ++= Seq(
-      ("com.typesafe.akka" %% "akka-http" % "10.2.2").cross(CrossVersion.for3Use2_13),
-      ("com.typesafe.akka" %% "akka-stream" % "2.6.10").cross(CrossVersion.for3Use2_13)
+      ("com.typesafe.akka" %% "akka-http" % "10.2.6").cross(CrossVersion.for3Use2_13),
+      ("com.typesafe.akka" %% "akka-stream" % "2.6.16").cross(CrossVersion.for3Use2_13)
     ),
     Compile / resourceGenerators += Def.task {
       val source = (webpage / Compile / scalaJSLinkedFile).value.data
@@ -34,7 +34,7 @@ lazy val core = crossProject(JSPlatform, JVMPlatform)
   .in(file("core"))
   .settings(
     libraryDependencies ++= Seq(
-      "io.circe" %%% "circe-generic" % "0.14.0-M6",
-      "io.circe" %%% "circe-parser" % "0.14.0-M6"
+      "io.circe" %%% "circe-generic" % "0.14.1",
+      "io.circe" %%% "circe-parser" % "0.14.1"
     )
   )
