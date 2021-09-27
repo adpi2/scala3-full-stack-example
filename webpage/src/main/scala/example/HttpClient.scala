@@ -15,7 +15,7 @@ import io.circe.Printer
 
 import cats.syntax.either.*
 
-class HttpClient(using ExecutionContext) extends NoteService:
+class HttpClient(using ExecutionContext) extends NoteService[Future]:
   private val printer: Printer = Printer(
     dropNullValues = true,
     indent = ""

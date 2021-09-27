@@ -1,47 +1,30 @@
 package example
 
-import akka.actor.ActorSystem
-import akka.http.scaladsl.*
+import cask.*
+import io.circe.generic.auto.*
 import com.typesafe.config.ConfigFactory
-
 import java.nio.file.Paths
 
-import scala.concurrent.ExecutionContext
+object WebServer extends MainRoutes:
+  @route("/api/notes", methods=Seq("get", "post"))
+  def api(req: Request) = 
+    if req.exchange.getRequestMethod.equalToString("get") then
+      encodeBody(repository.getAllNotes())
+    else 
+      val CreateNote(title, content) = parseBody[CreateNote](req)
+      val newNote = repository.createNote(title, content)
+      encodeBody(newNote)
 
-object WebServer extends server.Directives with CirceSupport:
-  @main def start =
-    given system: ActorSystem = ActorSystem("webserver")
-    given ExecutionContext = system.dispatcher
+  @staticResources("/index.html")
+  def index() = "index.html"
 
-    val config = ConfigFactory.load()
-    val interface = config.getString("http.interface")
-    val port = config.getInt("http.port")
-    val directory = Paths.get(config.getString("example.directory"))
+  @staticResources("/assets")
+  def assets() = "assets/"
 
-    val repository = Repository(directory)
-    Http()
-      .newServerAt(interface, port)
-      .bindFlow(base ~ assets ~ api(repository))
-    println(s"Server online at http://$interface:$port/")
+  val config = ConfigFactory.load()
+  override def host = config.getString("http.interface")
+  override def port = config.getInt("http.port")
 
-  private val base: server.Route =
-    pathSingleSlash (
-      getFromResource("index.html")
-    )
+  val repository = Repository(Paths.get(config.getString("example.directory")))
 
-  private val assets: server.Route =
-    path("assets" / Remaining) { file =>
-      getFromResource("assets/" + file)
-    }
-
-  private def api(repository: Repository): server.Route =
-    path("api" / "notes")(
-      get (
-        complete(repository.getAllNotes())
-       ) ~
-        post (
-          entity(as[CreateNote]) { request =>
-            complete(repository.createNote(request.title, request.content))
-          }
-        )
-    )
+  initialize()
