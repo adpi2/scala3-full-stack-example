@@ -25,7 +25,7 @@ object WebServer extends server.Directives with CirceSupport:
     println(s"Server online at http://$interface:$port/")
 
   private val base: server.Route =
-    pathSingleSlash (
+    pathSingleSlash(
       getFromResource("index.html")
     )
 
@@ -36,10 +36,10 @@ object WebServer extends server.Directives with CirceSupport:
 
   private def api(repository: Repository): server.Route =
     path("api" / "notes")(
-      get (
+      get(
         complete(repository.getAllNotes())
-       ) ~
-        post (
+      ) ~
+        post(
           entity(as[CreateNote]) { request =>
             complete(repository.createNote(request.title, request.content))
           }

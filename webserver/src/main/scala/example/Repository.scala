@@ -6,7 +6,7 @@ import scala.jdk.CollectionConverters.*
 import java.nio.file.{Path, Paths, Files, StandardOpenOption}
 import java.util.UUID
 
-import cats.syntax.either._
+import cats.syntax.either.*
 
 import io.circe.syntax.*
 import io.circe.parser.decode

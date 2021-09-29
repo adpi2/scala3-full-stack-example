@@ -6,9 +6,8 @@ lazy val webpage = project
   .settings(
     scalaJSUseMainModuleInitializer := true,
     libraryDependencies ++= Seq(
-      ("org.scala-js" %%% "scalajs-dom" % "1.2.0")
-        .cross(CrossVersion.for3Use2_13)
-    )
+      "org.scala-js" %%% "scalajs-dom" % "1.2.0"
+    ).map(_.cross(CrossVersion.for3Use2_13))
   )
   .dependsOn(core.js)
 
@@ -16,9 +15,9 @@ lazy val webserver = project
   .in(file("webserver"))
   .settings(
     libraryDependencies ++= Seq(
-      ("com.typesafe.akka" %% "akka-http" % "10.2.6").cross(CrossVersion.for3Use2_13),
-      ("com.typesafe.akka" %% "akka-stream" % "2.6.16").cross(CrossVersion.for3Use2_13)
-    ),
+      "com.typesafe.akka" %% "akka-http" % "10.2.6",
+      "com.typesafe.akka" %% "akka-stream" % "2.6.16"
+    ).map(_.cross(CrossVersion.for3Use2_13)),
     Compile / resourceGenerators += Def.task {
       val source = (webpage / Compile / scalaJSLinkedFile).value.data
       val dest = (Compile / resourceManaged).value / "assets" / "main.js"

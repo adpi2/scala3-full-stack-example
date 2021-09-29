@@ -30,11 +30,10 @@ class HttpClient(using ExecutionContext) extends NoteService:
   def createNote(title: String, content: String): Future[Note] =
     val request = Request(
       "./api/notes",
-      new {
+      new:
         method = HttpMethod.POST
         headers = js.Dictionary("Content-Type" -> "application/json")
         body = printer.print(CreateNote(title, content).asJson)
-      }
     )
     for
       resp <- Fetch.fetch(request).toFuture
