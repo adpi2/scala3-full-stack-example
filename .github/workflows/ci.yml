@@ -3,6 +3,8 @@ on: pull_request
 jobs:
   check:
     runs-on: ubuntu-latest
+    env:
+      SBT_NATIVE_CLIENT: true
     steps:
       - uses: actions/checkout@v2
       - uses: olafurpg/setup-scala@v13
