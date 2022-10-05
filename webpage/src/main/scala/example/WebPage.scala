@@ -40,6 +40,14 @@ object WebPage:
       h2(note.title),
       p(note.content)
     )
+
+    val deleteButton = button("Delete Note")
+    deleteButton.onclick = _ =>
+      service
+        .deleteNote(note.id)
+        .map(res => if res then appContainer.removeChild(elem))
+
+    elem.appendChild(deleteButton)
     elem.className = "note"
     appContainer.appendChild(elem)
 

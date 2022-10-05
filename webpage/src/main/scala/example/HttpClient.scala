@@ -31,6 +31,17 @@ class HttpClient(using ExecutionContext):
       note <- resp.to[Note]
     yield note
 
+  def deleteNote(id: String): Future[Boolean] =
+    val request = Request(
+      s"./api/notes/$id",
+      new:
+        method = HttpMethod.DELETE
+    )
+    for
+      resp <- Fetch.fetch(request).toFuture
+      res <- resp.to[Boolean]
+    yield res
+
   extension (resp: Response)
     private def to[T: Reader]: Future[T] =
       if resp.ok then
