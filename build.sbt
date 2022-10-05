@@ -15,8 +15,7 @@ lazy val webserver = project
   .in(file("webserver"))
   .settings(
     libraryDependencies ++= Seq(
-      "com.typesafe.akka" %% "akka-http" % "10.2.10" cross CrossVersion.for3Use2_13,
-      "com.typesafe.akka" %% "akka-stream" % "2.6.20" cross CrossVersion.for3Use2_13,
+      "com.lihaoyi" %% "cask" % "0.8.0",
       "org.scalameta" %% "munit" % "1.0.0-M3" % Test
     ),
     Compile / resourceGenerators += Def.task {
@@ -34,8 +33,7 @@ lazy val core = crossProject(JSPlatform, JVMPlatform)
   .in(file("core"))
   .settings(
     libraryDependencies ++= Seq(
-      "io.circe" %%% "circe-generic" % "0.14.3",
-      "io.circe" %%% "circe-parser" % "0.14.3",
+      "com.lihaoyi" %%% "upickle" % "2.0.0",
       "org.scalameta" %%% "munit" % "1.0.0-M3" % Test
     )
   )

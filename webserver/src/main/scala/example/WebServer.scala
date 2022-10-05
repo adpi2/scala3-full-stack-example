@@ -1,47 +1,37 @@
 package example
 
-import akka.actor.ActorSystem
-import akka.http.scaladsl.*
-import com.typesafe.config.ConfigFactory
-
 import java.nio.file.Paths
 
-import scala.concurrent.ExecutionContext
+import cask.*
 
-object WebServer extends server.Directives with CirceSupport:
-  @main def start =
-    given system: ActorSystem = ActorSystem("webserver")
-    given ExecutionContext = system.dispatcher
+object WebServer extends MainRoutes:
+  private val repository = Repository(Paths.get("./target/data"))
 
-    val config = ConfigFactory.load()
-    val interface = config.getString("http.interface")
-    val port = config.getInt("http.port")
-    val directory = Paths.get(config.getString("example.directory"))
+  initialize()
+  println(s"Server online at http://$host:$port/")
 
-    val repository = Repository(directory)
-    Http()
-      .newServerAt(interface, port)
-      .bindFlow(base ~ assets ~ api(repository))
-    println(s"Server online at http://$interface:$port/")
-
-  private val base: server.Route =
-    pathSingleSlash(
-      getFromResource("index.html")
+  @cask.get("/")
+  def base() =
+    StaticResource(
+      "index.html",
+      getClass.getClassLoader,
+      Seq("Content-Type" -> "text/html")
     )
 
-  private val assets: server.Route =
-    path("assets" / Remaining) { file =>
-      getFromResource("assets/" + file)
-    }
+  @cask.get("/assets/:fileName", subpath = true)
+  def getAsset(fileName: String) =
+    val contentType =
+      if fileName.endsWith(".js") then Some("text/javascript")
+      else if fileName.endsWith(".js.map") then Some("application/json")
+      else if fileName.endsWith(".html") then Some("text/html")
+      else if fileName.endsWith(".css") then Some("text/css")
+      else None
+    val headers = contentType.map("Content-Type" -> _).toSeq
+    StaticResource(s"assets/$fileName", getClass.getClassLoader, headers)
 
-  private def api(repository: Repository): server.Route =
-    path("api" / "notes")(
-      get(
-        complete(repository.getAllNotes())
-      ) ~
-        post(
-          entity(as[CreateNote]) { request =>
-            complete(repository.createNote(request.title, request.content))
-          }
-        )
-    )
+  @cask.getJson("api/notes")
+  def getAllNotes(): Seq[Note] = repository.getAllNotes()
+
+  @cask.postJson("api/notes")
+  def createNote(title: String, content: String): Note =
+    repository.createNote(title, content)

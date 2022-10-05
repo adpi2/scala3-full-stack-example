@@ -8,24 +8,15 @@ import java.io.IOException
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext
 
-import io.circe.scalajs.*
-import io.circe.syntax.*
-import io.circe.parser.decode
-import io.circe.Printer
+import upickle.default.*
 
-import cats.syntax.either.*
-
-class HttpClient(using ExecutionContext) extends NoteService:
-  private val printer: Printer = Printer(
-    dropNullValues = true,
-    indent = ""
-  )
+class HttpClient(using ExecutionContext):
 
   def getAllNotes(): Future[Seq[Note]] =
     for
       resp <- Fetch.fetch("./api/notes").toFuture
-      json <- resp.jsonOrFailure
-    yield decodeJs[Seq[Note]](json).valueOr(throw _)
+      notes <- resp.to[Seq[Note]]
+    yield notes
 
   def createNote(title: String, content: String): Future[Note] =
     val request = Request(
@@ -33,14 +24,16 @@ class HttpClient(using ExecutionContext) extends NoteService:
       new:
         method = HttpMethod.POST
         headers = js.Dictionary("Content-Type" -> "application/json")
-        body = printer.print(CreateNote(title, content).asJson)
+        body = write(ujson.Obj("title" -> title, "content" -> content))
     )
     for
       resp <- Fetch.fetch(request).toFuture
-      json <- resp.jsonOrFailure
-    yield decodeJs[Note](json).valueOr(throw _)
+      note <- resp.to[Note]
+    yield note
 
   extension (resp: Response)
-    private def jsonOrFailure: Future[js.Any] =
-      if resp.ok then resp.json().toFuture
+    private def to[T: Reader]: Future[T] =
+      if resp.ok then
+        for json <- resp.text().toFuture
+        yield read[T](json)
       else Future.failed(new IOException(resp.statusText))

@@ -6,42 +6,34 @@ import scala.jdk.CollectionConverters.*
 import java.nio.file.{Path, Paths, Files, StandardOpenOption}
 import java.util.UUID
 
-import cats.syntax.either.*
+import upickle.default.*
 
-import io.circe.syntax.*
-import io.circe.parser.decode
-import io.circe.Printer
+trait Repository:
+  def getAllNotes(): Seq[Note]
+  def createNote(title: String, content: String): Note 
 
-trait Repository extends NoteService
 
 object Repository:
-  private val printer: Printer = Printer(
-    dropNullValues = true,
-    indent = ""
-  )
-
-  def apply(directory: Path)(using ExecutionContext): Repository =
+  def apply(directory: Path): Repository =
     if !Files.exists(directory) then Files.createDirectory(directory)
     new FileRepository(directory)
 
-  private class FileRepository(directory: Path)(using ExecutionContext)
+  private class FileRepository(directory: Path)
       extends Repository:
-    def getAllNotes(): Future[Seq[Note]] = Future {
+    def getAllNotes(): Seq[Note] =
       val files = Files.list(directory).iterator.asScala
       files
         .filter(_.toString.endsWith(".json"))
         .map { file =>
           val bytes = Files.readAllBytes(file)
-          decode[Note](new String(bytes)).valueOr(throw _)
+          read[Note](bytes)
         }
         .toSeq
-    }
 
-    def createNote(title: String, content: String): Future[Note] = Future {
+    def createNote(title: String, content: String): Note =
       val id = UUID.randomUUID().toString
       val note = Note(id, title, content)
       val file = directory.resolve(s"$id.json")
-      val bytes = printer.print(note.asJson).getBytes
+      val bytes = write(note).getBytes
       Files.write(file, bytes, StandardOpenOption.CREATE)
       note
-    }
